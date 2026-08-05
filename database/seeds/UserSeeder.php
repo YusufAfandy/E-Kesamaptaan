@@ -2,73 +2,78 @@
 
 use Illuminate\Database\Seeder;
 use App\User;
-use Illuminate\Support\Facades\DB; // Tambahkan ini untuk membersihkan tabel
+use Illuminate\Support\Facades\DB;
 
 class UserSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
     public function run()
     {
-        // 0. MEMBERSIHKAN TABEL (Mencegah error Duplicate Entry)
+        // 1. MEMBERSIHKAN TABEL (Agar tidak terjadi error Duplicate Entry)
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         User::truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        // 1. Akun Admin Urkes
+        // 2. MEMBUAT AKUN OTORITAS (Admin, SDM, Kapolres)
+        // Akun-akun ini diperlukan untuk login sistem
         User::create([
-            'nrp'           => 'admin01',
             'nama_lengkap'  => 'Bripka Andi Hermawan',
             'pangkat'       => 'Bripka',
-            'satker'        => 'Urkes',
+            'nrp'           => 'admin01',
             'jenis_kelamin' => 'L',
+            'satker'        => 'Urkes',
             'role'          => 'admin_urkes',
             'password'      => bcrypt('polres123'),
         ]);
 
-        // 2. Akun Tim SDM
         User::create([
-            'nrp'           => 'sdm01',
             'nama_lengkap'  => 'Aipda Budi Santoso',
             'pangkat'       => 'Aipda',
-            'satker'        => 'SDM',
+            'nrp'           => 'sdm01',
             'jenis_kelamin' => 'L',
+            'satker'        => 'Bag SDM',
             'role'          => 'tim_sdm',
             'password'      => bcrypt('polres123'),
         ]);
 
-        // 3. Akun Kapolres
         User::create([
-            'nrp'           => 'kapolres',
             'nama_lengkap'  => 'AKBP Setiawan Jati',
             'pangkat'       => 'AKBP',
-            'satker'        => 'Pimpinan',
+            'nrp'           => 'kapolres',
             'jenis_kelamin' => 'L',
+            'satker'        => 'Pimpinan',
             'role'          => 'kapolres',
             'password'      => bcrypt('polres123'),
         ]);
 
-        // 4. Daftar Anggota dengan Satker berbeda-beda (Untuk Grafik)
+        // 3. DAFTAR ANGGOTA POLISI (Data Uji Coba untuk Grafik)
         $anggota = [
-            ['nrp' => '96010101', 'nama' => 'Briptu Aris Permana', 'pangkat' => 'Briptu', 'sk' => 'Sat Reskrim'],
-            ['nrp' => '97020202', 'nama' => 'Bripka Deni Setiawan', 'pangkat' => 'Bripka', 'sk' => 'Sat Lantas'],
-            ['nrp' => '98030303', 'nama' => 'Aipda Heri Cahyono', 'pangkat' => 'Aipda', 'sk' => 'Sat Sabhara'],
-            ['nrp' => '99040404', 'nama' => 'Brigpol Siska Amalia', 'pangkat' => 'Brigpol', 'sk' => 'Sat Intelkam'],
-            ['nrp' => '95050505', 'nama' => 'Iptu Eko Prasetyo', 'pangkat' => 'Iptu', 'sk' => 'Sat Reskrim'],
-            ['nrp' => '94060606', 'nama' => 'Bripka Rina Wulandari', 'pangkat' => 'Bripka', 'sk' => 'Sat Lantas'],
-            ['nrp' => '93070707', 'nama' => 'Aiptu Agus Santoso', 'pangkat' => 'Aiptu', 'sk' => 'Sat Sabhara'],
-            ['nrp' => '92080808', 'nama' => 'Brigpol Dwi Lestari', 'pangkat' => 'Brigpol', 'sk' => 'Sat Intelkam'],
-            ['nrp' => '91090909', 'nama' => 'Iptu Rudi Hartono', 'pangkat' => 'Iptu', 'sk' => 'Sat Reskrim'],
-            ['nrp' => '90010101', 'nama' => 'Briptu Siti Nurhaliza', 'pangkat' => 'Briptu', 'sk' => 'Sat Lantas'],
+            ['nama' => 'Briptu Aris Permana',   'pangkat' => 'Briptu', 'nrp' => '96010101', 'sk' => 'Sat Reskrim'],
+            ['nama' => 'Bripka Deni Setiawan',  'pangkat' => 'Bripka', 'nrp' => '97020202', 'sk' => 'Sat Lantas'],
+            ['nama' => 'Aipda Heri Cahyono',    'pangkat' => 'Aipda',  'nrp' => '98030303', 'sk' => 'Sat Sabhara'],
+            ['nama' => 'Brigpol Siska Amalia',  'pangkat' => 'Brigpol','nrp' => '99040404', 'sk' => 'Sat Intelkam'],
+            ['nama' => 'Iptu Eko Prasetyo',     'pangkat' => 'Iptu',   'nrp' => '95050505', 'sk' => 'Sat Reskrim'],
+            ['nama' => 'Bripka Rina Wulandari', 'pangkat' => 'Bripka', 'nrp' => '94060606', 'sk' => 'Sat Lantas'],
+            ['nama' => 'Aiptu Agus Santoso',    'pangkat' => 'Aiptu',  'nrp' => '93070707', 'sk' => 'Sat Sabhara'],
+            ['nama' => 'Brigpol Dwi Lestari',   'pangkat' => 'Brigpol','nrp' => '92080808', 'sk' => 'Sat Intelkam'],
+            ['nama' => 'Iptu Rudi Hartono',     'pangkat' => 'Iptu',   'nrp' => '91090909', 'sk' => 'Sat Reskrim'],
+            ['nama' => 'Briptu Siti Nurhaliza', 'pangkat' => 'Briptu', 'nrp' => '90010101', 'sk' => 'Sat Lantas'],
         ];
 
+        // 4. LOOPING UNTUK INSERT DATA ANGGOTA KE DATABASE
         foreach ($anggota as $a) {
             User::create([
-                'nrp' => $a['nrp'],
-                'nama_lengkap' => $a['nama'],
-                'pangkat' => $a['pangkat'],
-                'satker' => $a['sk'], // Sekarang Satker akan tersimpan
-                'jenis_kelamin' => 'L',
-                'role' => 'personil',
-                'password' => bcrypt('polres123'),
+                'nama_lengkap'  => $a['nama'],       // 1. Nama
+                'pangkat'       => $a['pangkat'],    // 2. Pangkat
+                'nrp'           => $a['nrp'],        // 3. NRP
+                'jenis_kelamin' => 'L',              // 4. Jenis Kelamin (Default L, sesuaikan jika perlu)
+                'satker'        => $a['sk'],         // 5. Kesatuan
+                'role'          => 'personil',       // Status sebagai Anggota Biasa
+                'password'      => bcrypt('polres123'),
             ]);
         }
     }

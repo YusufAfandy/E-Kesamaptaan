@@ -1,33 +1,46 @@
 @extends('layouts.app')
 
 @section('content')
+<!-- Library Utama untuk Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
 <div class="space-y-8">
     
-    <!-- HEADER LAPORAN -->
-    <div class="flex justify-between items-end no-print">
+    <!-- HEADER & SEARCH BAR -->
+    <div class="flex flex-col md:flex-row justify-between items-center gap-6 no-print">
         <div>
-            <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tighter leading-none">Rekapitulasi Global</h2>
-            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mt-2">Database Kesiapan Jasmani & Kesehatan Personil</p>
+            <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tighter leading-none">Database Rekapitulasi</h2>
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2 tracking-[0.3em]">Export Data Kesiapan Personil ke Excel</p>
         </div>
-        <div class="flex gap-3">
-            <!-- Tombol Cetak -->
-            <button onclick="window.print()" class="bg-[#0F172A] hover:bg-black text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl active:scale-95 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                Cetak Dokumen
+
+        <div class="flex items-center gap-4 w-full md:w-auto">
+            <!-- SEARCH INPUT -->
+            <div class="relative w-full md:w-80">
+                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Cari NRP atau Nama..." 
+                    class="w-full bg-white border border-slate-200 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:ring-2 focus:ring-green-600 transition-all shadow-sm">
+            </div>
+
+            <!-- TOMBOL EXCEL SINGLE -->
+            <button onclick="exportToExcel()" class="bg-green-600 hover:bg-black text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-green-900/20 active:scale-95 flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export Excel
             </button>
         </div>
     </div>
 
-    <!-- TABEL REKAPITULASI -->
+    <!-- TABEL REKAPITULASI (ID: reportTable) -->
     <div class="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left">
+            <table class="w-full text-left" id="reportTable">
                 <thead>
-                    <tr class="text-slate-300 font-black text-[10px] uppercase tracking-widest border-b border-slate-50">
-                        <th class="px-10 py-8">Data Personil</th>
-                        <th class="px-6 py-8 text-center">Hasil Medis (TD/BMI)</th>
+                    <tr class="bg-slate-50 text-slate-400 font-black text-[10px] uppercase tracking-widest border-b border-slate-100">
+                        <th class="px-10 py-8">Nama Lengkap & NRP</th>
+                        <th class="px-6 py-8 text-center">Tensi (S/D)</th>
+                        <th class="px-6 py-8 text-center">Indeks BMI</th>
                         <th class="px-6 py-8 text-center">Status Medis</th>
-                        <th class="px-6 py-8 text-center">Nilai Jasmani</th>
+                        <th class="px-6 py-8 text-center">Nilai Akhir Jasmani</th>
                     </tr>
                 </thead>
                 <tbody class="font-bold">
@@ -36,22 +49,26 @@
                         $m = $row->medis->last(); 
                         $s = $row->samaptas->last(); 
                     @endphp
-                    <tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition">
+                    <tr class="table-row border-b border-slate-50 last:border-0 hover:bg-slate-50/30 transition">
                         <td class="px-10 py-6">
                             <p class="text-blue-900 text-sm">{{ $row->nama_lengkap }}</p>
-                            <p class="text-slate-400 text-[9px] uppercase tracking-widest">{{ $row->pangkat }} — {{ $row->nrp }}</p>
+                            <p class="text-slate-400 text-[9px] uppercase tracking-tighter">{{ $row->pangkat }} — {{ $row->nrp }}</p>
+                        </td>
+                        <td class="px-6 py-6 text-center text-slate-600">
+                            {{ $m ? $m->tensi_sistolik.'/'.$m->tensi_diastolik : '-' }}
                         </td>
                         <td class="px-6 py-6 text-center">
-                            <p class="text-slate-600 text-xs">{{ $m ? $m->tensi_sistolik.'/'.$m->tensi_diastolik : '-' }}</p>
-                            <p class="{{ $m && $m->bmi > 25 ? 'text-red-500' : 'text-blue-500' }} text-[10px]">BMI: {{ $m ? $m->bmi : '-' }}</p>
+                            <span class="{{ ($m && $m->bmi >= 30) ? 'text-red-600' : 'text-blue-600' }}">
+                                {{ $m ? $m->bmi : '-' }}
+                            </span>
                         </td>
                         <td class="px-6 py-6 text-center">
                             @if($m)
-                                <span class="px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest {{ $m->status_kelayakan == 'Memenuhi Syarat' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600' }}">
+                                <span class="uppercase text-[9px] {{ $m->status_kelayakan == 'Memenuhi Syarat' ? 'text-green-600' : 'text-red-600' }}">
                                     {{ $m->status_kelayakan }}
                                 </span>
                             @else
-                                <span class="text-slate-300 text-[9px] italic font-normal tracking-widest">Belum Periksa</span>
+                                <span class="text-slate-300 font-normal italic text-[9px]">Belum Periksa</span>
                             @endif
                         </td>
                         <td class="px-6 py-6 text-center">
@@ -65,13 +82,46 @@
     </div>
 </div>
 
-<style>
-    @media print {
-        .no-print { display: none !important; }
-        body { background: white !important; }
-        .rounded-[3rem] { border-radius: 0 !important; border: none !important; box-shadow: none !important; }
-        aside { display: none !important; }
-        .ml-64 { margin-left: 0 !important; }
+<script>
+    // 1. FUNGSI PENCARIAN REAL-TIME
+    function filterTable() {
+        const input = document.getElementById("searchInput");
+        const filter = input.value.toUpperCase();
+        const tr = document.getElementsByClassName("table-row");
+        for (let i = 0; i < tr.length; i++) {
+            const content = tr[i].textContent || tr[i].innerText;
+            tr[i].style.display = content.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+        }
     }
-</style>
+
+    // 2. FUNGSI EXPORT EXCEL DENGAN FORMAT RAPI (TANPA EDIT MANUAL)
+    function exportToExcel() {
+        const table = document.getElementById("reportTable");
+        
+        // Buat Worksheet dari Tabel
+        const ws = XLSX.utils.table_to_sheet(table);
+
+        // --- PENGATURAN KERAPIHAN (AUTO-WIDTH) ---
+        const wscols = [
+            { wch: 35 }, // Kolom Nama & NRP (Lebar)
+            { wch: 15 }, // Kolom Tensi
+            { wch: 15 }, // Kolom BMI
+            { wch: 25 }, // Kolom Status Medis
+            { wch: 20 }, // Kolom Nilai Jasmani
+        ];
+        ws['!cols'] = wscols;
+
+        // Buat Workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Rekapitulasi");
+
+        // Nama File: Laporan_Tanggal.xlsx
+        const date = new Date().toISOString().slice(0, 10);
+        const fileName = "E-Kesamaptaan_Rekap_" + date + ".xlsx";
+
+        // Download File
+        XLSX.writeFile(wb, fileName);
+    }
+</script>
+
 @endsection

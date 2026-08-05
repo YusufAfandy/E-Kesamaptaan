@@ -19,7 +19,7 @@
                     <img src="{{ asset('img/logo-polri.png') }}" class="w-8">
                 </div>
                 <div>
-                    <p class="text-white text-[10px] font-black uppercase tracking-[0.3em] leading-none">Polres Kota</p>
+                    <p class="text-white text-[10px] font-black uppercase tracking-[0.3em] leading-none">Polres Mojokerto</p>
                     <p class="text-slate-400 text-[12px] font-bold">E-Kesamaptaan</p>
                 </div>
             </div>
@@ -32,19 +32,21 @@
             </p>
         </div>
 
-        <!-- Mini Statistik Bawah -->
+        <!-- Mini Statistik Bawah (DINAMIS) -->
         <div class="grid grid-cols-2 gap-8 relative z-10">
             <div class="bg-slate-800/40 backdrop-blur-md p-6 rounded-2xl border border-white/5">
-                <p class="text-yellow-500 text-3xl font-black italic">248</p>
+                <!-- ANGKA DINAMIS: TOTAL ANGGOTA -->
+                <p class="text-yellow-500 text-3xl font-black italic">{{ $totalAnggota }}</p>
                 <p class="text-slate-500 text-[10px] font-black uppercase mt-1 tracking-widest">Anggota Terdaftar</p>
             </div>
             <div class="bg-slate-800/40 backdrop-blur-md p-6 rounded-2xl border border-white/5">
-                <p class="text-green-500 text-3xl font-black italic">89%</p>
+                <!-- ANGKA DINAMIS: PERSENTASE SIAP TUGAS -->
+                <p class="text-green-500 text-3xl font-black italic">{{ $persentaseSiap }}%</p>
                 <p class="text-slate-500 text-[10px] font-black uppercase mt-1 tracking-widest">Siap Bertugas</p>
             </div>
         </div>
         
-        <p class="text-slate-600 text-[10px] font-bold relative z-10 italic">© 2026 Polres Kota • E-Kesamaptaan v2.1</p>
+        <p class="text-slate-600 text-[10px] font-bold relative z-10 italic">© 2026 Polres Mojokerto • E-Kesamaptaan v2.1</p>
     </div>
 
     <!-- SISI KANAN: FORM LOGIN -->

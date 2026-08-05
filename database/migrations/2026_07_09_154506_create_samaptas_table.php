@@ -16,7 +16,7 @@ class CreateSamaptasTable extends Migration
     Schema::create('samaptas', function (Blueprint $table) {
         $table->bigIncrements('id');
         $table->bigInteger('user_id')->unsigned(); // ID Anggota yang tes
-        $table->string('periode'); // Contoh: 2024-Semester 1
+        $table->string('periode'); // Contoh: 2026-Semester 1
         
         // Samapta A
         $table->integer('lari_meter'); // Jarak tempuh lari 12 menit

@@ -1,19 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
-<!-- Container Utama Grid -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
     
-    <!-- ================= KOLOM KIRI (LEBAR: 2/3) ================= -->
+    <!-- KOLOM KIRI: ALERTS & TABEL -->
     <div class="lg:col-span-2 space-y-8">
         
-        <!-- Judul Dashboard -->
-        <div>
-            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Panel Medis & Urkes</h2>
-            <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Pusat Kendali Kesehatan Personil</p>
-        </div>
-
-        <!-- 1. KOTAK PERINGATAN MERAH (KRITIS) -->
+        <!-- 1. PERINGATAN MEDIS (RED BOX) -->
         <div class="bg-gradient-to-r from-red-600 to-red-500 rounded-[2.5rem] p-8 shadow-xl shadow-red-200 text-white relative overflow-hidden">
             <div class="flex justify-between items-center mb-6 relative z-10">
                 <h4 class="font-black uppercase tracking-[0.2em] text-[10px] flex items-center gap-2">
@@ -21,7 +14,7 @@
                     Peringatan Medis
                 </h4>
                 <span class="bg-white/20 backdrop-blur-md px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
-                    {{ count($kritis) }} Anggota Perlu Atensi
+                    {{ $jumlah_kritis }} ANGGOTA PERLU ATENSI
                 </span>
             </div>
             
@@ -30,24 +23,25 @@
                 <div class="bg-white rounded-[1.5rem] p-5 text-slate-800 flex justify-between items-center shadow-lg transition hover:scale-[1.01]">
                     <div>
                         <p class="font-black text-base uppercase leading-tight text-blue-900">{{ $k->user->nama_lengkap }}</p>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ $k->user->pangkat }} — {{ $k->user->nrp }}</p>
-                        <div class="flex gap-2 mt-3">
-                            @if($k->tensi_sistolik >= 140)
-                                <span class="bg-red-100 text-red-600 px-3 py-1 rounded-lg text-[8px] font-black uppercase">Hipertensi</span>
-                            @endif
-                            @if($k->bmi >= 27)
-                                <span class="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-[8px] font-black uppercase">Obesitas</span>
-                            @endif
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{{ $k->user->nrp }}</p>
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            {{-- LABEL DINAMIS DENGAN WARNA --}}
+                            @if($k->tensi_sistolik >= 140) <span class="bg-red-600 text-white animate-pulse px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">Hipertensi</span> @endif
+                            
+                            @if($k->bmi < 18.5) <span class="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg text-[8px] font-black uppercase">Underweight</span> @endif
+                            @if($k->bmi >= 25 && $k->bmi < 30) <span class="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-[8px] font-black uppercase">Overweight</span> @endif
+                            @if($k->bmi >= 30) <span class="bg-red-600 text-white animate-pulse px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest">Obesitas</span> @endif
+                            
+                            @if($k->status_kelayakan == 'Tidak Memenuhi Syarat') <span class="bg-slate-800 text-white px-3 py-1 rounded-lg text-[8px] font-black uppercase">TMS</span> @endif
                         </div>
                     </div>
                     <div class="text-right border-l-2 border-slate-50 pl-6">
                         <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Tensi Darah</p>
-                        <p class="text-2xl font-black text-red-600 leading-none">{{ $k->tensi_sistolik }}/{{ $k->tensi_diastolik }}</p>
+                        <p class="text-2xl font-black {{ $k->tensi_sistolik >= 140 ? 'text-red-600 animate-pulse' : 'text-slate-800' }} leading-none">{{ $k->tensi_sistolik }}/{{ $k->tensi_diastolik }}</p>
                     </div>
                 </div>
                 @endforeach
             </div>
-            <img src="{{ asset('img/logo-polri.png') }}" class="absolute right-[-20px] bottom-[-20px] w-48 opacity-10 pointer-events-none filter brightness-0 invert">
         </div>
 
         <!-- 2. TABEL PEMERIKSAAN TERBARU -->
@@ -56,87 +50,77 @@
                  <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Pemeriksaan Terbaru</h4>
                  <a href="{{ url('/medis') }}" class="text-[9px] font-black text-blue-600 uppercase hover:underline tracking-widest">Kelola Semua Data →</a>
              </div>
-             <div class="overflow-x-auto">
-                 <table class="w-full text-left text-xs">
-                     <thead class="text-slate-400 uppercase font-black tracking-widest border-b border-slate-50">
-                         <tr>
-                             <th class="pb-5">Anggota</th>
-                             <th class="pb-5 text-center">TD</th>
-                             <th class="pb-5 text-center">BMI</th>
-                             <th class="pb-5 text-center">Status</th>
-                         </tr>
-                     </thead>
-                     <tbody class="font-bold text-slate-700">
-                         @foreach($atensi as $p)
-                         <tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition">
-                             <td class="py-5">
-                                 <p class="text-blue-900">{{ $p->user->nama_lengkap }}</p>
-                                 <p class="text-[9px] text-slate-400 font-normal uppercase">{{ $p->user->pangkat }}</p>
-                             </td>
-                             <td class="text-center text-slate-500 font-medium">{{ $p->tensi_sistolik }}/{{ $p->tensi_diastolik }}</td>
-                             <td class="text-center">
-                                 <span class="{{ $p->bmi > 25 ? 'text-orange-500' : 'text-blue-600' }}">{{ $p->bmi }}</span>
-                             </td>
-                             <td class="text-center">
-                                 <span class="px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter {{ $p->status_kelayakan == 'Memenuhi Syarat' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600' }}">
-                                     {{ $p->status_kelayakan == 'Memenuhi Syarat' ? 'Siap Bertugas' : 'TMS' }}
-                                 </span>
-                             </td>
-                         </tr>
-                         @endforeach
-                     </tbody>
-                 </table>
-             </div>
+             <table class="w-full text-left text-xs">
+                 <thead class="text-slate-400 font-black tracking-widest border-b border-slate-50">
+                     <tr>
+                         <th class="pb-5">Anggota</th>
+                         <th class="pb-5 text-center">TD</th>
+                         <th class="pb-5 text-center">BMI</th>
+                         <th class="pb-5 text-center">Status</th>
+                     </tr>
+                 </thead>
+                 <tbody class="font-bold text-slate-700">
+                     @foreach($atensi as $p)
+                     <tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition">
+                         <td class="py-5">
+                             <p class="text-blue-900 leading-tight uppercase">{{ $p->user->nama_lengkap }}</p>
+                             <p class="text-[8px] text-slate-300 font-normal uppercase mt-1">{{ $p->user->nrp }}</p>
+                         </td>
+                         <td class="text-center text-slate-500 font-medium">{{ $p->tensi_sistolik }}/{{ $p->tensi_diastolik }}</td>
+                         
+                         <!-- BMI DENGAN LABEL DINAMIS & EFEK PULSE -->
+                         <td class="text-center">
+                            @if($p->bmi >= 30)
+                                <p class="text-red-600 font-black animate-pulse text-sm">{{ $p->bmi }}</p>
+                                <p class="text-[7px] text-red-500 uppercase">Obesitas</p>
+                            @elseif($p->bmi >= 25)
+                                <p class="text-orange-500 font-black text-sm">{{ $p->bmi }}</p>
+                                <p class="text-[7px] text-orange-400 uppercase">Overweight</p>
+                            @elseif($p->bmi < 18.5)
+                                <p class="text-blue-400 font-black text-sm">{{ $p->bmi }}</p>
+                                <p class="text-[7px] text-blue-300 uppercase">Underweight</p>
+                            @else
+                                <p class="text-green-600 font-black text-sm">{{ $p->bmi }}</p>
+                                <p class="text-[7px] text-green-400 uppercase">Ideal</p>
+                            @endif
+                         </td>
+
+                         <td class="text-center">
+                             <span class="px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter {{ $p->status_kelayakan == 'Memenuhi Syarat' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100 animate-pulse' }}">
+                                 {{ $p->status_kelayakan == 'Memenuhi Syarat' ? 'MS' : 'TMS' }}
+                             </span>
+                         </td>
+                     </tr>
+                     @endforeach
+                 </tbody>
+             </table>
         </div>
     </div>
 
-    <!-- ================= KOLOM KANAN (KECIL: 1/3) ================= -->
-    <div class="space-y-8">
-        <!-- 3. DISTRIBUSI BMI (BARS) -->
-        <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100">
-            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-10 text-center">Distribusi BMI</h4>
-            
-            <div class="space-y-7">
-                @php 
-                    $bmi_data = [
-                        ['l' => 'Underweight', 'v' => $kurus, 'c' => 'bg-blue-400'],
-                        ['l' => 'Normal', 'v' => $ideal, 'c' => 'bg-green-500'],
-                        ['l' => 'Overweight', 'v' => $overweight, 'c' => 'bg-yellow-500'],
-                        ['l' => 'Obesitas', 'v' => $obesitas, 'c' => 'bg-red-500']
-                    ]; 
-                @endphp
-                
-                @foreach($bmi_data as $b)
-                <div>
-                    <div class="flex justify-between text-[9px] font-black mb-2 uppercase tracking-widest">
-                        <span class="text-slate-500">{{ $b['l'] }}</span>
-                        <span class="text-slate-900">{{ $b['v'] }} ORG</span>
-                    </div>
-                    <div class="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden">
-                        <div class="h-full {{ $b['c'] }} rounded-full transition-all duration-1000 shadow-sm" 
-                             style="width: {{ ($total_periksa > 0) ? ($b['v'] / $total_periksa) * 100 : 0 }}%">
-                        </div>
-                    </div>
+    <!-- KOLOM KANAN: DISTRIBUSI BMI -->
+    <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100">
+        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-10 text-center">Distribusi BMI</h4>
+        <div class="space-y-6">
+            @php 
+                $bmi_bars = [
+                    ['l' => 'Underweight', 'v' => $kurus, 'c' => 'bg-blue-400'],
+                    ['l' => 'Normal', 'v' => $ideal, 'c' => 'bg-green-500'],
+                    ['l' => 'Overweight', 'v' => $overweight, 'c' => 'bg-orange-400'],
+                    ['l' => 'Obesitas', 'v' => $obesitas, 'c' => 'bg-red-600 animate-pulse']
+                ]; 
+            @endphp
+            @foreach($bmi_bars as $b)
+            <div>
+                <div class="flex justify-between text-[9px] font-black mb-2 uppercase tracking-widest">
+                    <span class="text-slate-500">{{ $b['l'] }}</span>
+                    <span class="text-slate-900">{{ $b['v'] }} ORG</span>
                 </div>
-                @endforeach
+                <div class="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden">
+                    <div class="h-full {{ $b['c'] }} rounded-full transition-all duration-1000 shadow-sm" style="width: {{ ($total_periksa > 0) ? ($b['v'] / $total_periksa) * 100 : 0 }}%"></div>
+                </div>
             </div>
-
-            <!-- Tombol Action -->
-            <div class="mt-14 space-y-3">
-                <a href="{{ url('/medis/create') }}" class="flex items-center justify-center w-full bg-blue-900 hover:bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-900/10 transition-all active:scale-95 text-[10px] uppercase tracking-widest gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
-                    Input Medis Baru
-                </a>
-                <p class="text-[8px] text-center text-slate-400 font-bold uppercase tracking-widest italic">Pembaruan data real-time</p>
-            </div>
-        </div>
-
-        <!-- Info Tambahan -->
-        <div class="bg-blue-50/50 p-8 rounded-[2.5rem] border border-blue-100/50">
-            <h5 class="text-[9px] font-black text-blue-900 uppercase tracking-widest mb-3 italic">Catatan Urkes:</h5>
-            <p class="text-[10px] text-blue-800/70 leading-relaxed font-medium">Personil dengan status **Rehabilitasi** atau **TMS** otomatis akan dipantau oleh pimpinan melalui Dashboard Peta Komando.</p>
+            @endforeach
         </div>
     </div>
-
 </div>
 @endsection

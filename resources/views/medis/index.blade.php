@@ -60,9 +60,13 @@
 
                         <!-- Kolom BMI -->
                         <td class="px-6 py-6 text-center">
-                            <span class="{{ $r->bmi > 25 ? 'text-red-500' : 'text-blue-600' }} text-sm font-black">
+                            <!-- Jika BMI >= 30 maka Merah & Berkedip, jika tidak maka Biru -->
+                            <span class="{{ $r->bmi >= 30 ? 'text-red-600 font-black animate-pulse' : 'text-blue-600' }} text-sm font-black">
                                 {{ $r->bmi }}
                             </span>
+                            @if($r->bmi >= 30)
+                                <p class="text-[7px] text-red-500 uppercase font-black tracking-tighter">Obesitas</p>
+                            @endif
                         </td>
 
                         <!-- Kolom Status -->
