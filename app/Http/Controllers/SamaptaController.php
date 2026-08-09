@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\User;
 use App\Samapta;
 
@@ -11,77 +11,64 @@ class SamaptaController extends Controller
 {
     public function __construct()
     {
-        // Memastikan hanya user yang sudah login yang bisa mengakses
         $this->middleware('auth');
     }
 
-    /**
-     * MENU: NILAI SAMAPTA
-     * Menampilkan daftar seluruh hasil tes jasmani yang sudah terkalkulasi.
-     */
     public function index()
     {
-        // Mengambil riwayat nilai beserta data personil terkait
-        $riwayat = Samapta::with('user')->latest()->get();
+        // Semua hasil tes ditampilkan sebagai riwayat, bukan hanya hasil terakhir.
+        $riwayat = Samapta::with('user')->orderBy('periode', 'desc')->orderBy('id', 'desc')->get();
 
         return view('samapta.index', compact('riwayat'));
     }
 
-    /**
-     * MENU: DATABASE ANGGOTA
-     * Menampilkan daftar identitas personil untuk dikelola (Edit/Hapus via Approval).
-     */
     public function indexAnggota()
     {
-        // Hanya mengambil user dengan role personil
-        $users = User::where('role', 'personil')->latest()->get();
+        $users = User::where('role', 'personil')->orderBy('nama_lengkap')->get();
 
         return view('samapta.database_anggota', compact('users'));
     }
 
-    /**
-     * FORM: ENTRY NILAI JASMANI
-     * Menampilkan halaman input nilai Samapta A dan B.
-     */
     public function create()
     {
-        // Mengambil daftar personil untuk pilihan dropdown di form
-        $personil = User::where('role', 'personil')->get();
+        $personil = User::where('role', 'personil')->orderBy('nama_lengkap')->get();
 
         return view('samapta.create', compact('personil'));
     }
 
     /**
-     * PROSES: SIMPAN & KALKULASI NILAI
-     * Menghitung skor otomatis berdasarkan standar operasional Polri.
+     * Simpan hasil tes baru.
+     *
+     * Setiap input baru dibuat sebagai record baru. Tidak ada update/upsert
+     * terhadap record lama, sehingga riwayat tes sebelumnya tetap aman.
      */
     public function store(Request $request)
     {
         $this->validate($request, [
-            'user_id'     => 'required',
-            'periode'     => 'required',
-            'lari_meter'  => 'required|numeric',
-            'pull_up'     => 'required|numeric',
-            'sit_up'      => 'required|numeric',
-            'push_up'     => 'required|numeric',
-            'shuttle_run' => 'required|numeric',
+            'user_id'     => 'required|exists:users,id',
+            'periode'     => 'required|string|max:100',
+            'lari_meter'  => 'required|numeric|min:0',
+            'pull_up'     => 'required|numeric|min:0',
+            'sit_up'      => 'required|numeric|min:0',
+            'push_up'     => 'required|numeric|min:0',
+            'shuttle_run' => 'required|numeric|min:0.01',
         ]);
 
-        // --- HITUNG SKOR (Sama dengan logika Update) ---
-        $lari_efektif = min($request->lari_meter, 2800);
-        $nilai_lari   = ($lari_efektif / 2800) * 100;
+        $user = User::where('id', $request->user_id)
+            ->where('role', 'personil')
+            ->firstOrFail();
 
-        $nilai_pull    = min(($request->pull_up / 18) * 100, 100);
-        $nilai_sit     = min(($request->sit_up / 40) * 100, 100);
-        $nilai_push    = min(($request->push_up / 40) * 100, 100);
-        $nilai_shuttle = min((16 / $request->shuttle_run) * 100, 100);
+        $nilai_akhir = $this->hitungNilai(
+            $request->lari_meter,
+            $request->pull_up,
+            $request->sit_up,
+            $request->push_up,
+            $request->shuttle_run
+        );
 
-        $nilai_akhir = round(($nilai_lari + $nilai_pull + $nilai_sit + $nilai_push + $nilai_shuttle) / 5, 2);
-
-        // Simpan ke Database
         Samapta::create([
-            'user_id'     => $request->user_id,
-            'periode'     => $request->periode,
+            'user_id'     => $user->id,
+            'periode'     => trim($request->periode),
             'lari_meter'  => $request->lari_meter,
             'pull_up'     => $request->pull_up,
             'sit_up'      => $request->sit_up,
@@ -90,51 +77,47 @@ class SamaptaController extends Controller
             'nilai_akhir' => $nilai_akhir,
         ]);
 
-        return redirect('/samapta')->with('success', 'Hasil penilaian jasmani berhasil disimpan.');
+        return redirect('/samapta')->with('success', 'Hasil penilaian jasmani baru berhasil disimpan. Riwayat lama tetap tersimpan.');
     }
 
-    /**
-     * FORM: EDIT NILAI JASMANI (Update Baru)
-     */
     public function edit($id)
     {
         $samapta = Samapta::findOrFail($id);
-        $personil = User::where('role', 'personil')->get();
+        $personil = User::where('role', 'personil')->orderBy('nama_lengkap')->get();
 
         return view('samapta.edit', compact('samapta', 'personil'));
     }
 
-    /**
-     * PROSES: UPDATE & RE-KALKULASI NILAI (Update Baru)
-     */
     public function update(Request $request, $id)
     {
         $this->validate($request, [
-            'user_id'     => 'required',
-            'periode'     => 'required',
-            'lari_meter'  => 'required|numeric',
-            'pull_up'     => 'required|numeric',
-            'sit_up'      => 'required|numeric',
-            'push_up'     => 'required|numeric',
-            'shuttle_run' => 'required|numeric',
+            'user_id'     => 'required|exists:users,id',
+            'periode'     => 'required|string|max:100',
+            'lari_meter'  => 'required|numeric|min:0',
+            'pull_up'     => 'required|numeric|min:0',
+            'sit_up'      => 'required|numeric|min:0',
+            'push_up'     => 'required|numeric|min:0',
+            'shuttle_run' => 'required|numeric|min:0.01',
         ]);
 
-        // --- REVISI: HITUNG ULANG NILAI ---
-        $lari_efektif = min($request->lari_meter, 2800);
-        $nilai_lari   = ($lari_efektif / 2800) * 100;
+        $user = User::where('id', $request->user_id)
+            ->where('role', 'personil')
+            ->firstOrFail();
 
-        $nilai_pull    = min(($request->pull_up / 18) * 100, 100);
-        $nilai_sit     = min(($request->sit_up / 40) * 100, 100);
-        $nilai_push    = min(($request->push_up / 40) * 100, 100);
-        $nilai_shuttle = min((16 / $request->shuttle_run) * 100, 100);
+        $nilai_akhir = $this->hitungNilai(
+            $request->lari_meter,
+            $request->pull_up,
+            $request->sit_up,
+            $request->push_up,
+            $request->shuttle_run
+        );
 
-        $nilai_akhir = round(($nilai_lari + $nilai_pull + $nilai_sit + $nilai_push + $nilai_shuttle) / 5, 2);
-
-        // Update ke Database
         $data = Samapta::findOrFail($id);
+
+        // Hanya record dengan ID tersebut yang diubah.
         $data->update([
-            'user_id'     => $request->user_id,
-            'periode'     => $request->periode,
+            'user_id'     => $user->id,
+            'periode'     => trim($request->periode),
             'lari_meter'  => $request->lari_meter,
             'pull_up'     => $request->pull_up,
             'sit_up'      => $request->sit_up,
@@ -146,23 +129,35 @@ class SamaptaController extends Controller
         return redirect('/samapta')->with('success', 'Data nilai berhasil diperbarui dan dihitung ulang.');
     }
 
-    /**
-     * FORM: EDIT IDENTITAS PERSONIL
-     */
     public function editPersonil($id)
     {
         $user = User::findOrFail($id);
+
         return view('samapta.edit_personil', compact('user'));
     }
 
-    /**
-     * PROSES: HAPUS DATA NILAI
-     */
     public function destroy($id)
     {
+        // Penghapusan hanya record nilai yang dipilih.
         $data = Samapta::findOrFail($id);
         $data->delete();
 
         return redirect('/samapta')->with('success', 'Data nilai jasmani tersebut telah dihapus.');
+    }
+
+    /**
+     * Mesin penilaian dipusatkan agar store dan update selalu konsisten.
+     */
+    private function hitungNilai($lari_meter, $pull_up, $sit_up, $push_up, $shuttle_run)
+    {
+        $lari_efektif = min((float) $lari_meter, 2800);
+        $nilai_lari = ($lari_efektif / 2800) * 100;
+
+        $nilai_pull = min(((float) $pull_up / 18) * 100, 100);
+        $nilai_sit = min(((float) $sit_up / 40) * 100, 100);
+        $nilai_push = min(((float) $push_up / 40) * 100, 100);
+        $nilai_shuttle = min((16 / (float) $shuttle_run) * 100, 100);
+
+        return round(($nilai_lari + $nilai_pull + $nilai_sit + $nilai_push + $nilai_shuttle) / 5, 2);
     }
 }

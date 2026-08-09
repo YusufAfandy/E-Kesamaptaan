@@ -40,19 +40,23 @@
                 </thead>
                 <tbody class="font-bold text-slate-700">
                     @foreach($users as $u)
-                    <tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition">
-                        <!-- Kolom Identitas -->
-                        <td class="px-10 py-6 text-left">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 bg-slate-100 text-blue-900 rounded-xl flex items-center justify-center font-black text-xs shadow-sm">
-                                    {{ substr($u->nama_lengkap, 0, 1) }}
-                                </div>
-                                <div>
-                                    <p class="text-blue-900 text-sm leading-tight">{{ $u->nama_lengkap }}</p>
-                                    <p class="text-slate-400 text-[9px] uppercase tracking-widest mt-1">NRP: {{ $u->nrp }}</p>
-                                </div>
-                            </div>
-                        </td>
+                    <td class="px-10 py-6">
+    <a href="{{ url('/anggota/'.$u->id.'/riwayat') }}" class="group block">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-slate-100 text-blue-900 rounded-xl flex items-center justify-center font-black text-xs shadow-sm group-hover:bg-blue-900 group-hover:text-white transition">
+                {{ substr($u->nama_lengkap, 0, 1) }}
+            </div>
+            <div>
+                <p class="text-blue-900 text-sm leading-tight group-hover:text-blue-600 group-hover:underline transition font-black uppercase">
+                    {{ $u->nama_lengkap }}
+                </p>
+                <p class="text-slate-400 text-[9px] uppercase tracking-widest mt-1">
+                    NRP: {{ $u->nrp }} — <span class="text-blue-400">Riwayat Progres →</span>
+                </p>
+            </div>
+        </div>
+    </a>
+</td>
 
                         <!-- Kolom Pangkat -->
                         <td class="px-6 py-6 text-center">

@@ -22,7 +22,7 @@ class CreateMedisTable extends Migration
         $table->decimal('tinggi_badan', 5, 2); // Contoh: 170.50
         $table->decimal('berat_badan', 5, 2);  // Contoh: 65.20
         $table->decimal('bmi', 5, 2);
-        $table->enum('status_kelayakan', ['Layak', 'Tidak Layak']);
+        $table->enum('status_kelayakan', ['Memenuhi Syarat', 'Tidak Memenuhi Syarat']);
         $table->text('catatan')->nullable();
         $table->timestamps();
 

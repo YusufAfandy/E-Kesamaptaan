@@ -61,12 +61,17 @@
                  </thead>
                  <tbody class="font-bold text-slate-700">
                      @foreach($atensi as $p)
-                     <tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition">
-                         <td class="py-5">
-                             <p class="text-blue-900 leading-tight uppercase">{{ $p->user->nama_lengkap }}</p>
-                             <p class="text-[8px] text-slate-300 font-normal uppercase mt-1">{{ $p->user->nrp }}</p>
-                         </td>
-                         <td class="text-center text-slate-500 font-medium">{{ $p->tensi_sistolik }}/{{ $p->tensi_diastolik }}</td>
+                     <td class="py-5">
+    <!-- Link ke Riwayat Individu -->
+    <a href="{{ url('/anggota/'.$p->user->id.'/riwayat') }}" class="group block">
+        <p class="text-blue-900 leading-tight uppercase group-hover:text-blue-600 group-hover:underline transition font-black">
+            {{ $p->user->nama_lengkap }}
+        </p>
+        <p class="text-[8px] text-slate-300 font-normal uppercase mt-1">
+            NRP: {{ $p->user->nrp }} — <span class="text-blue-400">Lihat Sejarah →</span>
+        </p>
+    </a>
+</td>
                          
                          <!-- BMI DENGAN LABEL DINAMIS & EFEK PULSE -->
                          <td class="text-center">
